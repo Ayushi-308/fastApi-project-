@@ -1,129 +1,70 @@
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException
-)
-
+from fastapi import ( APIRouter, Depends, HTTPException )
 from sqlalchemy.orm import Session
-
 from database import get_db
-
-from auth.models import (
-    User,
-    Role
-)
-
-from auth.schemas import (
-    UserCreate,
-    LoginRequest,
-    UserResponse,
-    Token
-)
-
-from auth.auth import (
-    hash_password,
-    verify_password,
-    create_access_token
-)
-
-from auth.dependencies import (
-    get_current_user,
-    require_permission
-)
+from auth.models import ( User, Role)
+from auth.schemas import ( UserCreate, LoginRequest, UserResponse, Token)
+from auth.auth import ( hash_password, verify_password, create_access_token)
+from auth.dependencies import ( get_current_user, require_permission)
 
 
 router = APIRouter(
     prefix="/auth",
-    tags=["Authentication"]
+    tags=["Authentication"] 
 )
 
 
-# =========================================================
 # REGISTER
-# =========================================================
-
-@router.post(
-    "/register",
-    response_model=UserResponse
-)
+@router.post( "/register", response_model=UserResponse)
 def register(
-
     user_data: UserCreate,
-
     db: Session = Depends(get_db)
 ):
-
     # Check username
-
-    existing_user = db.query(User).filter(
-        User.username == user_data.username
-    ).first()
+    existing_user = db.query(User).filter(User.username == user_data.username).first()
 
     if existing_user:
-
         raise HTTPException(
             status_code=400,
             detail="Username already exists"
         )
 
     # Check email
-
-    existing_email = db.query(User).filter(
-        User.email == user_data.email
-    ).first()
+    existing_email = db.query(User).filter( User.email == user_data.email ).first()
 
     if existing_email:
-
         raise HTTPException(
             status_code=400,
             detail="Email already exists"
         )
 
     # Get student role
-
-    student_role = db.query(Role).filter(
-        Role.name == "student"
-    ).first()
+    student_role = db.query(Role).filter( Role.name == "student").first()
 
     if student_role is None:
-
         raise HTTPException(
             status_code=500,
             detail="Student role not found"
         )
 
     # Hash password
-
-    hashed_password = hash_password(
-        user_data.password
-    )
+    hashed_password = hash_password( user_data.password)
 
     # Create user
-
     new_user = User(
-
         username=user_data.username,
-
         email=user_data.email,
-
         password=hashed_password,
-
         role_id=student_role.id
     )
 
     db.add(new_user)
-
     db.commit()
-
     db.refresh(new_user)
-
     return new_user
 
 
-# =========================================================
-# LOGIN
-# =========================================================
 
+# LOGIN
 @router.post(
     "/login",
     response_model=Token
@@ -172,10 +113,7 @@ def login(
     }
 
 
-# =========================================================
 # GET CURRENT USER
-# =========================================================
-
 @router.get(
     "/me"
 )
@@ -198,10 +136,7 @@ def get_me(
     }
 
 
-# =========================================================
 # MAKE USER ADMIN
-# =========================================================
-
 @router.put(
     "/users/{user_id}/make-admin"
 )
@@ -256,10 +191,7 @@ def make_user_admin(
     }
 
 
-# =========================================================
 # REMOVE ADMIN
-# =========================================================
-
 @router.put(
     "/users/{user_id}/remove-admin"
 )
@@ -312,10 +244,7 @@ def remove_admin(
     return {
 
         "message": "Admin access removed",
-
         "user_id": user.id,
-
         "username": user.username,
-
         "role": user.role.name
     }
