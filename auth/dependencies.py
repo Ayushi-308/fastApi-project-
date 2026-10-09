@@ -1,35 +1,17 @@
 from fastapi import Depends, HTTPException
-
-from fastapi.security import (
-    HTTPBearer,
-    HTTPAuthorizationCredentials
-)
-
+from fastapi.security import (  HTTPBearer,  HTTPAuthorizationCredentials)
 from jose import JWTError, jwt
-
 from sqlalchemy.orm import Session
-
 from database import get_db
-
 from auth.models import User
-
-from auth.auth import (
-    SECRET_KEY,
-    ALGORITHM
-)
+from auth.auth import (  SECRET_KEY,  ALGORITHM)
 
 
-# =========================================================
 # BEARER TOKEN
-# =========================================================
-
 security = HTTPBearer()
 
 
-# =========================================================
 # GET CURRENT USER
-# =========================================================
-
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
@@ -70,10 +52,7 @@ def get_current_user(
     return user
 
 
-# =========================================================
 # PERMISSION CHECKER
-# =========================================================
-
 def require_permission(permission_name: str):
 
     def permission_checker(
